@@ -1,36 +1,59 @@
-import express from "express"
-import cors from "cors"
+import express from "express";
+import cors from "cors";
 import helmet from "helmet";
+import dotenv from "dotenv";
+import connectDB from "./Db/index.js";
+import rateLimit from "express-rate-limit";
 
+// Load environment variables first
+dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 3000;
 
-// 1. Security & Utility Middlewares
+//database connect
+connectDB()
+// Security & Utility Middlewares
 app.use(helmet());
-app.use(cors()); // Crucial for allowing requests from your headless storefront
-app.use(express.json()); // Parses incoming JSON payloads
+app.use(cors());
+app.use(express.json());
 
-// 2. Health Check Route (Used by CI/CD pipelines to ensure the vault is online)
-app.get('/api/health', (req, res) => {
+// Health Check Route
+app.get("/api/health", (req, res) => {
   res.status(200).json({
-    status: 'success',
-    message: 'Code Vault Backend is operational',
+    status: "success",
+    message: "Code Vault Backend is operational",
   });
 });
 
-// 3. API Route Placeholders (To be built once your schema is finalized)
 
 
-// TODO: Add Headless Storefront API routes here
-// TODO: Add Payment webhook routes (Stripe, PayU, Komoju)
-// TODO: Add Shipping integrations (Shiprocket, Shipmozo)
+// Home Route
+import router from "./src/Routes/firebase.routes.js";
 
-// 4. Global Error Handler (Catches any unhandled bugs)
-
-
-app.listen(PORT, ()=>{
-  console.log(`Server is listining on http://localhost:${PORT}`)
+app.get("/", (req, res) => {
+  res.status(200).json({
+    message: "Welcome to Code Vault API",
+  });
+});
+app.get('/firebase', (req, res) => {
+  res.status(200).json({
+    message: "firebase route working"
+  })
 })
 
-export default app
+// Global Error Handler
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+
+  res.status(500).json({
+    status: "error",
+    message: "Something went wrong!",
+  });
+});
+
+app.listen(PORT, () => {
+  console.log(`Server is listening on http://localhost:${PORT}`);
+});
+
+export default app;
