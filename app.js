@@ -1,59 +1,48 @@
+import dotenv from "dotenv";
+// Load environment variables first
+dotenv.config();
+
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
-import dotenv from "dotenv";
 import connectDB from "./Db/index.js";
-import rateLimit from "express-rate-limit";
+import authrouter from "./src/Routes/auth.routes.js";
+import { apiLimiter } from "./src/Middleware/rateLimit.middleware.js";
 
-// Load environment variables first
-dotenv.config();
+// Connect to Database
+connectDB();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-//database connect
-connectDB()
 // Security & Utility Middlewares
 app.use(helmet());
-app.use(cors());
-app.use(express.json());
+app.use(cors()); // Crucial for allowing requests from your headless storefront
+app.use(express.json()); // Parses incoming JSON payloads
 
 // Health Check Route
-app.get("/api/health", (req, res) => {
+app.get("/api/health", apiLimiter, (req, res) => {
   res.status(200).json({
     status: "success",
-    message: "Code Vault Backend is operational",
+    message: "Handheld Ordering System Backend is operational",
   });
 });
 
 
-
-// Home Route
-import router from "./src/Routes/firebase.routes.js";
-
-app.get("/", (req, res) => {
-  res.status(200).json({
-    message: "Welcome to Code Vault API",
-  });
-});
-app.get('/firebase', (req, res) => {
-  res.status(200).json({
-    message: "firebase route working"
-  })
-})
+app.use("/api/auth",authrouter)
 
 // Global Error Handler
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-
-  res.status(500).json({
+  console.error("Unhandled Error:", err.stack);
+  res.status(err.statuscode || err.statusCode || 500).json({
     status: "error",
-    message: "Something went wrong!",
+    message: err.message || "Internal Server Error",
   });
 });
 
+// Start Server
 app.listen(PORT, () => {
-  console.log(`Server is listening on http://localhost:${PORT}`);
+  console.log(`Server is running on http://localhost:${PORT}`);
 });
 
 export default app;

@@ -1,8 +1,19 @@
-import admin from "firebase-admin";
-import serviceAccount from "../orderingsystem-932e2-firebase-adminsdk-fbsvc-105d81aef9.json" assert { type: "json" };
+import { initializeApp, cert } from "firebase-admin/app";
+import { readFileSync } from "fs";
+import { join } from "path";
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
+const serviceAccount = JSON.parse(
+  readFileSync(
+    join(
+      process.cwd(),
+      "orderingsystem-932e2-firebase-adminsdk-fbsvc-105d81aef9.json"
+    ),
+    "utf8"
+  )
+);
+
+const app = initializeApp({
+  credential: cert(serviceAccount),
 });
 
-export default admin;
+export default app;
