@@ -15,7 +15,10 @@ const userSchema = new mongoose.Schema(
       lowercase: true
     },
 
-    phone: String,
+    phone: {
+    type: String,
+    trim: true
+    },
 
     password: {
       type: String,
@@ -24,7 +27,7 @@ const userSchema = new mongoose.Schema(
 
     role: {
       type: String,
-      enum: ["admin", "manager", "waiter", "cashier", "kitchen"],
+      enum: ["admin", "manager", "waiter", "cashier", "kitchen_staff"],
       default: "waiter"
     },
 
