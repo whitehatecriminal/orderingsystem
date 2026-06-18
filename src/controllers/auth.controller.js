@@ -6,19 +6,16 @@ export const registerUser = async (req, res) => {
    try {
     const firebaseUser = req.user;
     const data = req.body;
-    console.log("Data", role)
+
+    // console.log("Firebase", firebaseUser)
+    // console.log("dat", data)
 
     const existingUser = await User.findOne({
-      email: firebaseUser.email
+      email: firebaseUser.decodedToken.email
     });
 
     const password = data.userInfo.password;
-    const passwordhash = bcrypt(password, 10)
-
-    // const roles = User.find({
-    //   role:  {$exists:  false}
-    // });
-    // console.log(roles)
+    const passwordhash = await bcrypt.hash(password, 10)
 
     if (existingUser) {
       return res.status(400).json({
@@ -28,16 +25,16 @@ export const registerUser = async (req, res) => {
     }
 
     const user = await User.create({
-      uid: firebaseUser.uid,
-      fullName: firebaseUser.name || "User",
-      email: firebaseUser.email,
-      picture: firebaseUser.picture || "",
-      phone: firebaseUser.phone_number || "",
-      emailverified: firebaseUser.email_verified || false,
-      signprovider: firebaseUser.firebase?.sign_in_provider || "firebase",
-      role: userInfo.roles,
+      uid: firebaseUser.decodedToken.uid,
+      fullName: firebaseUser.decodedToken.name || "User",
+      email: firebaseUser.decodedToken.email,
+      picture: firebaseUser.decodedToken.picture || "",
+      phone: firebaseUser.decodedToken.phone_number || "",
+      emailverified: firebaseUser.decodedToken.email_verified || false,
+      signprovider: firebaseUser.decodedToken.firebase?.sign_in_provider || "firebase",
+      role: data.userInfo.role,
       password: passwordhash,
-      refreshToken: userInfo.refreshToken || ""
+      refreshToken: data.firebaseInfo.refreshtoken || ""
     });
 
     return res.status(201).json({
@@ -54,30 +51,46 @@ export const registerUser = async (req, res) => {
   }
 };
 
-export const loginUser = async (req, res)=> {
-  const  firebaseUser = req.user;
-  const {password} = req.body;
+export const loginUser = async (req, res) => {
+  const firebaseUser = req.user;
+  const data  = req.body;
+  
+  const email = firebaseUser?.decodedToken?.email;
 
-  //checking email exists or not
-  const email = firebaseUser.email;
-
-  if(!email){
-    return new ApiResponse(400, "Please provide email", null)
+  if (!email) {
+    return res
+      .status(400)
+      .json(new ApiResponse(400, "Please provide email", null));
   }
 
-  const checkemail = await User.find({
-    email: email,
-    password
-  });
-
-  if(!checkemail) return new ApiResponse(401, "User not found", null)
-
-  if(firebaseUser.firebase.sign_in_provider === "password"){
-    //checking password
-    if(!password) return res.status(400).json(new ApiResponse(400, "Please provide the password", null))
+  if (
+    firebaseUser?.decodedToken?.firebase?.sign_in_provider === "password" &&
+    !data.userInfo.password
+  ) {
+    return res
+      .status(400)
+      .json(new ApiResponse(400, "Please provide password", null));
   }
 
-  return res.status(200).json(
-    new ApiResponse(200, "User data fetched", checkemail)
-  );
-}
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    return res
+      .status(404)
+      .json(new ApiResponse(404, "User not found", null));
+  }
+
+  if (firebaseUser?.decodedToken?.firebase?.sign_in_provider === "password") {
+    const isMatch = await bcrypt.compare(data.userInfo.password, user.password);
+
+    if (!isMatch) {
+      return res
+        .status(401)
+        .json(new ApiResponse(401, "Invalid password", null));
+    }
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "Login successful", user));
+};

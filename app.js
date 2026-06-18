@@ -28,8 +28,17 @@ app.get("/api/health", apiLimiter, (req, res) => {
   });
 });
 
-
+import branch from "./src/Routes/branch.routes.js"
+import category from "./src/Routes/category.routes.js"
+import menu from "./src/Routes/menu.routes.js"
+import table from "./src/Routes/table.routes.js"
+import orders from "./src/Routes/order.routes.js"
 app.use("/api/auth",authrouter)
+app.use("/api/branch", branch)
+app.use("/api/category", category)
+app.use("/api/menu", menu)
+app.use("/api/table", table)
+app.use("/api/orders", orders)
 
 // Global Error Handler
 app.use((err, req, res, next) => {

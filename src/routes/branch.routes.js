@@ -1,0 +1,42 @@
+import express from "express"
+import {createBranch, getAllBranches, getBranchById, updateBranch, deleteBranch,
+    toggleBranchStatus
+} from "../controllers/branch.controller.js"
+import { verifyFirebaseToken } from "../Middleware/auth.middleware.js";
+import {isAdmin} from "../Middleware/admin.middleware.js"
+
+const router = express.Router();
+
+router.post(
+  "/addbranch",
+  verifyFirebaseToken,
+  isAdmin,
+  createBranch
+);
+
+router.get("/allbranch", getAllBranches);
+
+router.get("/onebranch/:id", getBranchById);
+
+router.put(
+  "/update/:id",
+  verifyFirebaseToken,
+  isAdmin,
+  updateBranch
+);
+
+router.delete(
+  "/remove/:id",
+  verifyFirebaseToken,
+  isAdmin,
+  deleteBranch
+);
+
+router.patch(
+  "/:id/status",
+  verifyFirebaseToken,
+  isAdmin,
+  toggleBranchStatus
+);
+
+export default router;

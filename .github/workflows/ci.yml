@@ -1,0 +1,32 @@
+image: node:24-alpine
+
+stages:
+  - validate
+  - test
+
+cache:
+  key: $CI_COMMIT_REF_SLUG
+  paths:
+    - node_modules/
+
+before_script:
+  - npm ci
+
+lint_code:
+  stage: validate
+  script:
+    - npm run lint
+    - node --check app.js
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_BRANCH == "develop"'
+
+run_tests:
+  stage: test
+  script:
+    - npm test --if-present
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_BRANCH == "develop"'

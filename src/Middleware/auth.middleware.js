@@ -1,5 +1,7 @@
 import { getAuth } from "firebase-admin/auth";
 import "../../config/firebase.config.js"
+import ApiResponse from "../utils/ApiRespose.js";
+import User from "../models/user.model.js"
 
 export const verifyFirebaseToken = async (req, res, next) => {
   try {
@@ -14,13 +16,22 @@ export const verifyFirebaseToken = async (req, res, next) => {
     const token = authHeader.split(" ")[1];
 
     const decodedToken = await getAuth().verifyIdToken(token);
-    console.log("decoded token", decodedToken)
+    // console.log("Decoded TOken", decodedToken)
 
-    req.user = decodedToken;
+    //find user in db
+    const dbuser = await User.findOne({
+      uid: decodedToken.uid
+    }).select("-password")
+    // console.log("Dbuser", dbuser)
+
+    req.user = {
+      decodedToken,
+      dbuser
+    };
 
     next();
   } catch (error) {
-    console.log("error", error)
+    console.error("error", error)
     return res.status(401).json({
       message: "Invalid token"
     });
