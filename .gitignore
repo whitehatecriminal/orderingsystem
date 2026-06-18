@@ -8,6 +8,8 @@ yarn-error.log*
 lerna-debug.log*
 .pnpm-debug.log*
 
+orderingsystem-932e2-firebase-adminsdk-fbsvc-105d81aef9.json
+
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 

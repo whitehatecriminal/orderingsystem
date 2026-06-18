@@ -1,75 +1,53 @@
-// import express from "express"
-// import cors from "cors"
-// import helmet from "helmet";
-
-
-// const app = express();
-// const PORT = process.env.PORT || 5000;
-
-// // 1. Security & Utility Middlewares
-// app.use(helmet());
-// app.use(cors()); // Crucial for allowing requests from your headless storefront
-// app.use(express.json()); // Parses incoming JSON payloads
-
-// // 2. Health Check Route (Used by CI/CD pipelines to ensure the vault is online)
-// app.get('/api/health', (req, res) => {
-//   res.status(200).json({
-//     status: 'success',
-//     message: 'Code Vault Backend is operational',
-//   });
-// });
-
-
-// // 3. API Route Placeholders (To be built once your schema is finalized)
-
-// // TODO: Add Headless Storefront API routes here
-// // TODO: Add Payment webhook routes (Stripe, PayU, Komoju)
-// // TODO: Add Shipping integrations (Shiprocket, Shipmozo)
-
-// // 4. Global Error Handler (Catches any unhandled bugs)
-
-
-// app.listen(PORT, ()=>{
-//   console.log(`Server is listining on http://localhost:${PORT}`)
-// })
-
-// export default app
-
-
-// himanshu
-
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
-import dotenv from "dotenv";
-
 import connectDB from "./Db/index.js";
+import authrouter from "./src/Routes/auth.routes.js";
+import { apiLimiter } from "./src/Middleware/rateLimit.middleware.js";
 
-import authRoutes from "./src/routes/auth.routes.js";
-
-
-
-dotenv.config();
-
+// Connect to Database
 connectDB();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3000;
 
+// Security & Utility Middlewares
 app.use(helmet());
-app.use(cors());
-app.use(express.json());
+app.use(cors()); // Crucial for allowing requests from your headless storefront
+app.use(express.json()); // Parses incoming JSON payloads
 
-
-app.use("/api/v1/auth",authRoutes);
-
-app.get("/api/health", (req, res) => {
+// Health Check Route
+app.get("/api/health", apiLimiter, (req, res) => {
   res.status(200).json({
     status: "success",
     message: "Handheld Ordering System Backend is operational",
   });
 });
 
-app.listen(PORT, () => {
-  console.log(` Server is listening on http://localhost:${PORT}`);
+import branch from "./src/Routes/branch.routes.js"
+import category from "./src/Routes/category.routes.js"
+import menu from "./src/Routes/menu.routes.js"
+import table from "./src/Routes/table.routes.js"
+import orders from "./src/Routes/order.routes.js"
+app.use("/api/auth",authrouter)
+app.use("/api/branch", branch)
+app.use("/api/category", category)
+app.use("/api/menu", menu)
+app.use("/api/table", table)
+app.use("/api/orders", orders)
+
+// Global Error Handler
+app.use((err, req, res, next) => {
+  console.error("Unhandled Error:", err.stack);
+  res.status(err.statuscode || err.statusCode || 500).json({
+    status: "error",
+    message: err.message || "Internal Server Error",
+  });
 });
+
+// Start Server
+app.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
+});
+
+export default app;

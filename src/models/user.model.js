@@ -2,6 +2,11 @@ import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema(
   {
+    uid: {
+      type: String,
+      required: true
+    },
+
     fullName: {
       type: String,
       required: true,
@@ -15,11 +20,16 @@ const userSchema = new mongoose.Schema(
       lowercase: true
     },
 
+    picture: {
+      type: String,
+      required: false
+    },
+
     phone: String,
 
     password: {
       type: String,
-      required: true
+      required: false
     },
 
     role: {
@@ -28,10 +38,20 @@ const userSchema = new mongoose.Schema(
       default: "waiter"
     },
 
-    isActive: {
+    emailverified: {
       type: Boolean,
-      default: true
+      default: false
+    },
+
+    signprovider: {
+      type: String,
+      
+    },
+    refreshToken: {
+      type: String,
+      require: false
     }
+
   },
   {
     timestamps: true
