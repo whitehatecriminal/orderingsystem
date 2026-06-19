@@ -1,0 +1,145 @@
+import Employee from "../models/employee.model.js";
+import ApiResponse from "../utils/ApiRespose.js";
+import asyncHandler from "../utils/asyncHandler.js";
+import mongoose from "mongoose";
+
+// Create Employee
+export const createEmployee = asyncHandler(async (req, res) => {
+  const { userId, designation, salary, joiningDate, branchId, isActive } = req.body;
+
+  //check if employee existed
+  const existedEmployee = await Employee.findOne({
+    userId,
+    branchId
+  });
+
+  if (existedEmployee) {
+    return res.status(400).json(
+      new ApiResponse(400, "User is already an employee in this branch")
+    );
+  }
+
+  // Count employees in this branch
+  const employeeCount = await Employee.countDocuments({ branchId });
+
+  // Generate employee code
+  const employeeCode = `EMP${String(employeeCount + 1).padStart(3, "0")}`;
+
+  const employee = await Employee.create({
+    userId,
+    employeeCode,
+    designation,
+    salary,
+    joiningDate,
+    branchId,
+    isActive
+  });
+
+  return res.status(201).json(
+    new ApiResponse(201, "Employee registered successfully", employee)
+  );
+});
+
+// Get All Employees
+export const getAllEmployees = asyncHandler(async (req, res) => {
+  const employees = await Employee.find()
+    .populate("userId", "fullName email role phone")
+    .populate("branchId", "branchName location");
+
+  return res.status(200).json(
+    new ApiResponse(200, "Employees fetched successfully", employees)
+  );
+});
+
+// Get Employee By ID
+export const getEmployeeById = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json(
+      new ApiResponse(400, "Invalid employee ID")
+    );
+  }
+
+  const employee = await Employee.findById(id)
+    .populate("userId", "fullName email role phone")
+    .populate("branchId", "branchName location");
+
+  if (!employee) {
+    return res.status(404).json(
+      new ApiResponse(404, "Employee not found")
+    );
+  }
+
+  return res.status(200).json(
+    new ApiResponse(200, "Employee fetched successfully", employee)
+  );
+});
+
+// Update Employee
+export const updateEmployee = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json(
+      new ApiResponse(400, "Invalid employee ID")
+    );
+  }
+
+  const employee = await Employee.findByIdAndUpdate(
+    id,
+    req.body,
+    { new: true, runValidators: true }
+  );
+
+  if (!employee) {
+    return res.status(404).json(
+      new ApiResponse(404, "Employee not found")
+    );
+  }
+
+  return res.status(200).json(
+    new ApiResponse(200, "Employee updated successfully", employee)
+  );
+});
+
+// Delete Employee
+export const deleteEmployee = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json(
+      new ApiResponse(400, "Invalid employee ID")
+    );
+  }
+
+  const employee = await Employee.findByIdAndDelete(id);
+
+  if (!employee) {
+    return res.status(404).json(
+      new ApiResponse(404, "Employee not found")
+    );
+  }
+
+  return res.status(200).json(
+    new ApiResponse(200, "Employee deleted successfully")
+  );
+});
+
+// Get Employees by Branch
+export const getEmployeesByBranch = asyncHandler(async (req, res) => {
+  const { branchId } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(branchId)) {
+    return res.status(400).json(
+      new ApiResponse(400, "Invalid branch ID")
+    );
+  }
+
+  const employees = await Employee.find({ branchId })
+    .populate("userId", "fullName email role phone");
+
+  return res.status(200).json(
+    new ApiResponse(200, "Employees fetched successfully for the branch", employees)
+  );
+});
