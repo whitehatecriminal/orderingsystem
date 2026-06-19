@@ -3,10 +3,12 @@ import ApiResponse from "../utils/ApiRespose.js";
 import asyncHandler from "../utils/asyncHandler.js";
 
 export const createOrder = asyncHandler(async (req, res) => {
+
+  const user = req.user
+  console.log("User", user)
   const {
-    tableId,
+    tableNumver,
     customerId,
-    waiterId,
     branchId,
     specialInstructions,
     subtotal = 0,
@@ -14,10 +16,20 @@ export const createOrder = asyncHandler(async (req, res) => {
     discount = 0
   } = req.body;
 
+  const waiterId = user?.dbuser?._id;
+  const table = await Table.findOne({
+    tableNumber,
+    branchId: branchId
+  });
+
+  if (!table) {
+    return res.status(404).json(new ApiResponse(404, "Table not found"));
+  }
+
   const totalAmount = subtotal + tax - discount;
 
   const order = await Order.create({
-    tableId,
+    tableId: table._id,
     customerId,
     waiterId,
     branchId,

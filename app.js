@@ -33,12 +33,31 @@ import category from "./src/Routes/category.routes.js"
 import menu from "./src/Routes/menu.routes.js"
 import table from "./src/Routes/table.routes.js"
 import orders from "./src/Routes/order.routes.js"
+import Customers from "./src/Routes/customer.routes.js"
+import audit from "./src/Routes/audit.routes.js"
+import employee from "./src/Routes/employee.routes.js"
+import inventory from "./src/Routes/inventory.routes.js"
+import notification from "./src/Routes/notification.routes.js"
+import orderDetails from "./src/Routes/orderDetails.routes.js"
+import payment from "./src/Routes/payment.routes.js"
+import sales from "./src/Routes/sales.routes.js"
+import user from "./src/Routes/user.routes.js"
+
 app.use("/api/auth",authrouter)
 app.use("/api/branch", branch)
 app.use("/api/category", category)
 app.use("/api/menu", menu)
 app.use("/api/table", table)
 app.use("/api/orders", orders)
+app.use("/api/customers", Customers)
+app.use("/api/audit", audit)
+app.use("/api/employees", employee)
+app.use("/api/inventory", inventory)
+app.use("/api/notifications", notification)
+app.use("/api/order-details", orderDetails)
+app.use("/api/payments", payment)
+app.use("/api/sales", sales)
+app.use("/api/users", user)
 
 // Global Error Handler
 app.use((err, req, res, next) => {
