@@ -6,7 +6,7 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import connectDB from "./Db/index.js";
-import authrouter from "./src/Routes/auth.routes.js";
+import authrouter from "./src/routes/auth.routes.js";
 import { apiLimiter } from "./src/Middleware/rateLimit.middleware.js";
 
 // Connect to Database
@@ -28,20 +28,20 @@ app.get("/api/health", apiLimiter, (req, res) => {
   });
 });
 
-import branch from "./src/Routes/branch.routes.js"
-import category from "./src/Routes/category.routes.js"
-import menu from "./src/Routes/menu.routes.js"
-import table from "./src/Routes/table.routes.js"
-import orders from "./src/Routes/order.routes.js"
-import Customers from "./src/Routes/customer.routes.js"
-import audit from "./src/Routes/audit.routes.js"
-import employee from "./src/Routes/employee.routes.js"
-import inventory from "./src/Routes/inventory.routes.js"
-import notification from "./src/Routes/notification.routes.js"
-import orderDetails from "./src/Routes/orderDetails.routes.js"
-import payment from "./src/Routes/payment.routes.js"
-import sales from "./src/Routes/sales.routes.js"
-import user from "./src/Routes/user.routes.js"
+import branch from "./src/routes/branch.routes.js"
+import category from "./src/routes/category.routes.js"
+import menu from "./src/routes/menu.routes.js"
+import table from "./src/routes/table.routes.js"
+import orders from "./src/routes/order.routes.js"
+import Customers from "./src/routes/customer.routes.js"
+import audit from "./src/routes/audit.routes.js"
+import employee from "./src/routes/employee.routes.js"
+import inventory from "./src/routes/inventory.routes.js"
+import notification from "./src/routes/notification.routes.js"
+import orderDetails from "./src/routes/orderDetails.routes.js"
+import payment from "./src/routes/payment.routes.js"
+import sales from "./src/routes/sales.routes.js"
+import user from "./src/routes/user.routes.js"
 
 app.use("/api/auth",authrouter)
 app.use("/api/branch", branch)
