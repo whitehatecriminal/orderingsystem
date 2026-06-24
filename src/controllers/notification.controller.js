@@ -2,25 +2,27 @@ import Notification from "../models/notification.model.js";
 import ApiResponse from "../utils/ApiRespose.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import mongoose from "mongoose";
+import Branch from "../models/branch.model.js"
+import { ApiError } from "../utils/ApiError.js";
 
 // Create Notification
-export const createNotification = asyncHandler(async (req, res) => {
-  const { userId, title, message, type, relatedId, branchId, priority } = req.body;
+// export const createNotification = asyncHandler(async (req, res) => {
+//   const { userId, title, message, type, relatedId, branchId, priority } = req.body;
 
-  const notification = await Notification.create({
-    userId,
-    title,
-    message,
-    type,
-    relatedId,
-    branchId,
-    priority
-  });
+//   const notification = await Notification.create({
+//     userId,
+//     title,
+//     message,
+//     type,
+//     relatedId,
+//     branchId,
+//     priority
+//   });
 
-  return res.status(201).json(
-    new ApiResponse(201, "Notification created successfully", notification)
-  );
-});
+//   return res.status(201).json(
+//     new ApiResponse(201, "Notification created successfully", notification)
+//   );
+// });
 
 // Get All Notifications
 export const getAllNotifications = asyncHandler(async (req, res) => {
@@ -150,5 +152,33 @@ export const markAsRead = asyncHandler(async (req, res) => {
 
   return res.status(200).json(
     new ApiResponse(200, "Notification marked as read successfully", notification)
+  );
+});
+
+// get all notification by branchId
+export const notificationByBranch = asyncHandler(async (req, res) => {
+  const { branchId } = req.body;
+
+  if(!branchId) return res.status(400).json(new ApiError(400, "PLease Provide BranchID"))
+
+  // Check branch exists
+  const branch = await Branch.findById(branchId);
+
+  if (!branch) {
+    return res.status(404).json(
+      new ApiError(404, "Branch not found")
+    );
+  }
+
+  // Get notifications of the branch
+  const notifications = await Notification.find({ branchId })
+    .sort({ createdAt: -1 });
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      "Notifications fetched successfully",
+      notifications
+    )
   );
 });

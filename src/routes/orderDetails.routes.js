@@ -8,17 +8,17 @@ import {
   getOrderDetailsByOrderId
 } from "../controllers/orderDetails.controller.js";
 import { verifyFirebaseToken } from "../Middleware/auth.middleware.js";
-
+import { verifyAdminAccess } from "../Middleware/verifyadminaccess.middleware.js";
 const router = express.Router();
 
 // All order details routes require user authentication
-router.use(verifyFirebaseToken);
+// router.use(verifyFirebaseToken);
 
 router.post("/", createOrderDetail);
 router.get("/", getAllOrderDetails);
 router.get("/:id", getOrderDetailById);
 router.get("/order/:orderId", getOrderDetailsByOrderId);
 router.put("/:id", updateOrderDetail);
-router.delete("/:id", deleteOrderDetail);
+router.delete("/:id", verifyAdminAccess, deleteOrderDetail);
 
 export default router;

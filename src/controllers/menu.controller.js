@@ -10,8 +10,13 @@ export const createMenuItem = asyncHandler(async (req, res) => {
     price,
     image,
     branchId,
+    plate,
     customizationOptions
   } = req.body;
+
+  if(!name || !categoryId || !price){
+    return res.status(400).json(new ApiResponse(400, "PLease provide all field"))
+  }
 
   const menuItem = await MenuItem.create({
     name,
@@ -20,6 +25,7 @@ export const createMenuItem = asyncHandler(async (req, res) => {
     price,
     image,
     branchId,
+    plate,
     customizationOptions
   });
 

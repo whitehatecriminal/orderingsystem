@@ -9,16 +9,17 @@ const notificationSchema = new mongoose.Schema(
             index: true
         },
 
+
         title: {
             type: String,
-            required: [true, "Notification title is required"],
+            required: [false, "Notification title is required"],
             trim: true,
             maxlength: 100
         },
 
         message: {
             type: String,
-            required: [true, "Notification message is required"],
+            required: [false, "Notification message is required"],
             trim: true,
             maxlength: 500
         },

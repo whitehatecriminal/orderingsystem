@@ -50,7 +50,7 @@ export const createPayment = asyncHandler(async (req, res) => {
   });
 
   // If payment is successful
-  if (payment.status === "paid") {
+  if (payment.status === "pai") {
     // Update order status
     order.status = "completed";
     await order.save();
