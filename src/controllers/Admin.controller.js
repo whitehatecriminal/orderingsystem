@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import asyncHandler from "../utils/AsyncHandler.js";
+import asyncHandler from "../utils/asyncHandler.js";
 import ApiResponse from "../utils/ApiRespose.js";
 
 export const verifyAdminPassword = asyncHandler(async (req, res) => {
