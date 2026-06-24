@@ -7,6 +7,17 @@ import mongoose from "mongoose";
 export const createEmployee = asyncHandler(async (req, res) => {
   const { userId, designation, salary, joiningDate, branchId, isActive } = req.body;
 
+  //check userid and branchid
+  if(!userId || !branchId){
+    return res.status(404).json(
+      new ApiResponse(404, "cant find userid or branchID")
+    )
+  }
+
+  if(!designation){
+    return res.status(400).json(new ApiResponse(400, "PLease provide designation"))
+  }
+
   //check if employee existed
   const existedEmployee = await Employee.findOne({
     userId,
@@ -51,19 +62,32 @@ export const getAllEmployees = asyncHandler(async (req, res) => {
   );
 });
 
-// Get Employee By ID
 export const getEmployeeById = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
-  if (!mongoose.Types.ObjectId.isValid(id)) {
+  if (!id || id.trim() === "") {
     return res.status(400).json(
-      new ApiResponse(400, "Invalid employee ID")
+      new ApiResponse(400, "Please provide Employee ID or Employee Code")
     );
   }
 
-  const employee = await Employee.findById(id)
-    .populate("userId", "fullName email role phone")
-    .populate("branchId", "branchName location");
+  let employee;
+
+  // Search by MongoDB ObjectId
+  if (mongoose.Types.ObjectId.isValid(id)) {
+    employee = await Employee.findById(id)
+      .populate("userId", "fullName email role phone")
+      .populate("branchId", "branchName location");
+  }
+
+  // If not found by _id, search by employeeCode
+  if (!employee) {
+    employee = await Employee.findOne({
+      employeeCode: id.trim().toUpperCase(), // optional if codes are uppercase
+    })
+      .populate("userId", "fullName email role phone")
+      .populate("branchId", "branchName location");
+  }
 
   if (!employee) {
     return res.status(404).json(
@@ -72,7 +96,11 @@ export const getEmployeeById = asyncHandler(async (req, res) => {
   }
 
   return res.status(200).json(
-    new ApiResponse(200, "Employee fetched successfully", employee)
+    new ApiResponse(
+      200,
+      "Employee fetched successfully",
+      employee
+    )
   );
 });
 

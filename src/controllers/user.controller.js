@@ -108,3 +108,4 @@ export const deleteUser = asyncHandler(async (req, res) => {
     new ApiResponse(200, "User deleted successfully")
   );
 });
+

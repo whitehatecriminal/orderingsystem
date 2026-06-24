@@ -1,6 +1,9 @@
 import Branch from "../models/branch.model.js";
 import ApiResponse from "../utils/ApiRespose.js";
 import asyncHandler from "../utils/asyncHandler.js";
+import Table from "../models/table.model.js"
+import Payment from "../models/payment.model.js";
+import Employee from "../models/employee.model.js"
 
 export const createBranch = asyncHandler(async (req, res) => {
   const {
@@ -12,11 +15,20 @@ export const createBranch = asyncHandler(async (req, res) => {
     phone,
     email,
     gstNumber,
+    TableCapacity,
+    staff,
     managerId,
     openingTime,
     closingTime
   } = req.body;
 
+  if (!branchName || !address) {
+    return res.status(400).json(
+      new ApiResponse(400, "Please provide branch name and address")
+    );
+  }
+
+  // Create Branch
   const branch = await Branch.create({
     branchName,
     address,
@@ -25,14 +37,37 @@ export const createBranch = asyncHandler(async (req, res) => {
     pincode,
     phone,
     email,
+    table: TableCapacity,
+    staff,
     gstNumber,
     managerId,
     openingTime,
     closingTime
   });
 
+  // Create Tables
+  const tables = [];
+
+  for (let i = 1; i <= TableCapacity; i++) {
+    tables.push({
+      branchId: branch._id,
+      capacity: 4,          // default seating capacity
+      tableNumber: i,
+      status: "vacant"
+    });
+  }
+
+  await Table.insertMany(tables);
+
   return res.status(201).json(
-    new ApiResponse(201, "Branch created successfully", branch)
+    new ApiResponse(
+      201,
+      "Branch and tables created successfully",
+      {
+        branch,
+        totalTablesCreated: tables.length
+      }
+    )
   );
 });
 
@@ -40,8 +75,43 @@ export const getAllBranches = asyncHandler(async (req, res) => {
   const branches = await Branch.find()
     .populate("managerId", "fullName email role");
 
+  const branchData = await Promise.all(
+    branches.map(async (branch) => {
+      const [employeeCount, tableCount, revenueResult] = await Promise.all([
+        Employee.countDocuments({ branchId: branch._id }),
+        Table.countDocuments({ branchId: branch._id }),
+        Payment.aggregate([
+          {
+            $match: {
+              branchId: branch._id,
+              status: "paid", // optional
+            },
+          },
+          {
+            $group: {
+              _id: null,
+              totalRevenue: { $sum: "$amount" },
+            },
+          },
+        ]),
+      ]);
+
+      return {
+        ...branch.toObject(),
+        employeeCount,
+        tableCount,
+        totalRevenue:
+          revenueResult.length > 0 ? revenueResult[0].totalRevenue : 0,
+      };
+    })
+  );
+
   return res.status(200).json(
-    new ApiResponse(200, "Branches fetched successfully", branches)
+    new ApiResponse(
+      200,
+      "Branches fetched successfully",
+      branchData
+    )
   );
 });
 

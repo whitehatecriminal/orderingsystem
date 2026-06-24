@@ -2,7 +2,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 
-const uploadDir = path.join(process.cwd(), 'src', 'public')
+const uploadDir = path.join(process.cwd(), 'src', 'upload')
 console.log(`Upload directory path: ${uploadDir}`);
 
 // ensuring folder exists

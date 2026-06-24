@@ -19,6 +19,12 @@ const menuItemSchema = new mongoose.Schema(
         default: ""
     },
 
+    plate: {
+        type: String,
+        enum: ["None", "Popular", "Vegetarian", "Chef Special", "Fresh New"],
+        default: "None"
+    },
+
     price: {
         type: Number,
         required: true,

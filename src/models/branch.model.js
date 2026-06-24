@@ -18,25 +18,37 @@ const branchSchema = new mongoose.Schema(
 
     city: {
       type: String,
-      required: true,
+      required: false,
       trim: true
     },
 
     state: {
       type: String,
-      required: true,
+      required: false,
       trim: true
+    },
+
+    table: {
+      type: Number,
+      required: true,
+      default: 10
+    },
+
+    staff: {
+      type: Number,
+      required: true,
+      default: 10
     },
 
     pincode: {
       type: String,
-      required: true,
+      required: false,
       match: [/^[0-9]{6}$/, "Invalid pincode"]
     },
 
     phone: {
       type: String,
-      required: [true, "Phone number is required"],
+      required: false,
       trim: true,
       unique: true,
       match: [/^[0-9]{10}$/, "Invalid phone number"]

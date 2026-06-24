@@ -1,16 +1,40 @@
 import OrderDetail from "../models/orderDetails.model.js";
 import ApiResponse from "../utils/ApiRespose.js";
 import asyncHandler from "../utils/asyncHandler.js";
+import Order from "../models/orders.model.js";
 import mongoose from "mongoose";
+import MenuItem from "../models/menu.model.js"
+import Notification from "../models/notification.model.js"
+import {ApiError} from "../utils/ApiError.js"
 
 // Create Order Detail
 export const createOrderDetail = asyncHandler(async (req, res) => {
-  const { orderId, menuItemId, quantity, unitPrice, notes } = req.body;
+  const { orderNumber, branchId, menuItemId, quantity, unitPrice, notes } = req.body;
+  //multiple order create on same orderid
+  // after placing order update price of the order on that orderID and create a notifcation
+  
+  // checking orddderID exists or not in order table
+  const existingOrder = await Order.findOne({
+    orderNumber,
+    branchId
+  });
+  
+  if(!existingOrder) return res.status(404).json(new ApiError(404, "Order Number not found", null));
 
-  const totalPrice = quantity * unitPrice;
+  // taking items
+  const menuItem = await MenuItem.findById({
+    _id: menuItemId
+  });
+
+  if(!menuItem) return res.status(404).json(new ApiError(404, "Item not found"))
+  if(menuItem.isAvailable === false) return res.status(503).json(new ApiError(503, "Item is not available"))
+  console.log("Subtotal", existingOrder.subtotal)
+  
+  const totalPrice = existingOrder.subtotal + quantity * menuItem.price;
+
 
   const orderDetail = await OrderDetail.create({
-    orderId,
+    orderId: existingOrder._id,
     menuItemId,
     quantity,
     unitPrice,
@@ -18,8 +42,43 @@ export const createOrderDetail = asyncHandler(async (req, res) => {
     notes
   });
 
+  // adding amount to order
+  const updatedOrder = await Order.findByIdAndUpdate(
+    existingOrder._id,
+    {
+        $inc: {
+            totalAmount: totalPrice
+        },
+        $set: {
+          status: "pending"
+        }
+    },
+    { new: true }
+  );
+
+  if(!updatedOrder) return res.status(500).json(new ApiError(500, "Error while adding the amount", AddAmountTOOrder))
+    
+
+  // creating notification
+  const notification = await Notification.create({
+      userId: existingOrder.waiterId,
+      message: `Table ${updatedOrder.tableId} placed a new order`,
+      type: "new_order",
+      relatedId: existingOrder._id,
+      branchId,
+      priority: "medium"
+  });
+
+    if(!notification) return res.status(500).json(new ApiError(500, "Enable to create notification", notification));
+
+    const data = {
+      orderDetail,
+      updatedOrder,
+      notification
+    }
+
   return res.status(201).json(
-    new ApiResponse(201, "Order detail created successfully", orderDetail)
+    new ApiResponse(201, "Order detail created successfully", data)
   );
 });
 

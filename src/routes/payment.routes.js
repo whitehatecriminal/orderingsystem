@@ -8,12 +8,16 @@ import {
   getPaymentsByOrder,
   getPaymentsByBranch
 } from "../controllers/payment.controller.js";
+import {createBill, uploadImages} from "../controllers/billgenerator.controller.js"
 import { verifyFirebaseToken } from "../Middleware/auth.middleware.js";
 import { isAdmin } from "../Middleware/admin.middleware.js";
+import {upload} from "../Middleware/multer.middleware.js";
 
 const router = express.Router();
 
-router.use(verifyFirebaseToken);
+// router.use(verifyFirebaseToken);
+router.post("/bill", createBill)
+router.post("/image", upload.single("Item"), uploadImages)
 
 router.post("/", createPayment);
 router.get("/", getAllPayments);
