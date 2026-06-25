@@ -62,6 +62,7 @@ const orderSchema = new mongoose.Schema(
       min: 0
     },
 
+
     discount: {
       type: Number,
       default: 0,
@@ -72,7 +73,13 @@ const orderSchema = new mongoose.Schema(
       type: Number,
       default: 0,
       min: 0
-    }
+    },
+    
+    guestCount: {
+      type: Number,
+      default: 1,
+      min: 1
+    },
   },
   {
     timestamps: true
