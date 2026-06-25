@@ -4,13 +4,13 @@ import {createBranch, getAllBranches, getBranchById, updateBranch, deleteBranch,
 } from "../controllers/branch.controller.js"
 import { verifyFirebaseToken } from "../Middleware/auth.middleware.js";
 import {isAdmin} from "../Middleware/admin.middleware.js"
+import { verifyAdminAccess } from "../Middleware/verifyadminaccess.middleware.js";
 
 const router = express.Router();
 
 router.post(
   "/addbranch",
-  verifyFirebaseToken,
-  isAdmin,
+  verifyAdminAccess,
   createBranch
 );
 
@@ -20,22 +20,19 @@ router.get("/onebranch/:id", getBranchById);
 
 router.put(
   "/update/:id",
-  verifyFirebaseToken,
-  isAdmin,
+  verifyAdminAccess,
   updateBranch
 );
 
 router.delete(
   "/remove/:id",
-  verifyFirebaseToken,
-  isAdmin,
+  verifyAdminAccess,
   deleteBranch
 );
 
 router.patch(
   "/:id/status",
-  verifyFirebaseToken,
-  isAdmin,
+  verifyAdminAccess,
   toggleBranchStatus
 );
 

@@ -1,12 +1,15 @@
 import Order from "../models/orders.model.js";
 import ApiResponse from "../utils/ApiRespose.js";
 import asyncHandler from "../utils/asyncHandler.js";
+import Table from "../models/table.model.js"
+import Branch from "../models/branch.model.js"
+import Customer from "../models/customer.model.js"
 
 export const createOrder = asyncHandler(async (req, res) => {
+  const user = req.user;
   const {
-    tableId,
-    customerId,
-    waiterId,
+    customername,
+    email,
     branchId,
     specialInstructions,
     subtotal = 0,
@@ -14,10 +17,49 @@ export const createOrder = asyncHandler(async (req, res) => {
     discount = 0
   } = req.body;
 
+  // Validate Branch ID
+  if (!branchId) {
+    return res
+      .status(400)
+      .json(new ApiResponse(400, "Please provide Branch ID"));
+  }
+
+  // Check Branch
+  const branch = await Branch.findById(branchId);
+
+  if (!branch) {
+    return res
+      .status(404)
+      .json(new ApiResponse(404, "Branch not found"));
+  }
+
+  // creating customer
+  const customer = await Customer.create({
+    name: customername,
+    email: email
+  });
+
+  // Find first vacant table
+  const table = await Table.findOne({
+    branchId,
+    status: "vacant"
+  }).sort({ tableNumber: 1 });
+
+  if (!table) {
+    return res
+      .status(400)
+      .json(new ApiResponse(400, "No vacant table available"));
+  }
+
+  // Waiter
+  const waiterId = user?.dbuser?._id;
+
+  // Calculate total
   const totalAmount = subtotal + tax - discount;
 
+  // Create Order
   const order = await Order.create({
-    tableId,
+    tableId: table._id,
     customerId,
     waiterId,
     branchId,
@@ -25,11 +67,24 @@ export const createOrder = asyncHandler(async (req, res) => {
     subtotal,
     tax,
     discount,
-    totalAmount
+    totalAmount,
+    status: "pending"
   });
 
+  // Update table status
+  table.status = "occupied";
+  await table.save();
+
   return res.status(201).json(
-    new ApiResponse(201, "Order created successfully", order)
+    new ApiResponse(
+      201,
+      "Order created successfully",
+      {
+        order,
+        table,
+        customer
+      }
+    )
   );
 });
 

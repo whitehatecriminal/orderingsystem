@@ -17,13 +17,14 @@ const orderSchema = new mongoose.Schema(
     customerId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Customer",
-      default: null
+      default: null,
+      required: false
     },
 
     waiterId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true
+      required: false
     },
 
     branchId: {

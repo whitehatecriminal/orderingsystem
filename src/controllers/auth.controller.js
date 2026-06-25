@@ -7,8 +7,8 @@ export const registerUser = async (req, res) => {
     const firebaseUser = req.user;
     const data = req.body;
 
-    // console.log("Firebase", firebaseUser)
-    // console.log("dat", data)
+    console.log("Firebase", firebaseUser)
+    console.log("dat", data)
 
     const existingUser = await User.findOne({
       email: firebaseUser.decodedToken.email
@@ -32,7 +32,7 @@ export const registerUser = async (req, res) => {
       phone: firebaseUser.decodedToken.phone_number || "",
       emailverified: firebaseUser.decodedToken.email_verified || false,
       signprovider: firebaseUser.decodedToken.firebase?.sign_in_provider || "firebase",
-      role: data.userInfo.role,
+      role: data.userInfo.role || "waiter",
       password: passwordhash,
       refreshToken: data.firebaseInfo.refreshtoken || ""
     });

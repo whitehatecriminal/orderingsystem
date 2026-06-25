@@ -15,15 +15,15 @@ export const isAdmin = (req, res, next) => {
 export const authorizeRoles = (...roles) => {
   return (req, res, next) => {
     if (!req.user?.dbuser?.role) {
+
       return res.status(401).json(
         new ApiResponse(401, "Unauthorized")
       );
     }
 
+
     if (!roles.includes(req.user.dbuser.role)) {
-      return res.status(403).json(
-        new ApiResponse(403, "Access Denied")
-      );
+      return res.status(403).json(new ApiResponse(403, "Access Denied"));
     }
 
     next();

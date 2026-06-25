@@ -4,10 +4,12 @@ import {createMenuItem, updateMenuItem, getAllMenuItems,
 } from "../controllers/menu.controller.js"
 import { verifyFirebaseToken } from "../Middleware/auth.middleware.js";
 import {isAdmin} from "../Middleware/admin.middleware.js"
+import { verifyAdminAccess } from "../Middleware/verifyadminaccess.middleware.js";
 
 const router  = express.Router();
 
-router.post("/", verifyFirebaseToken, isAdmin, createMenuItem);
+// router.post("/", verifyFirebaseToken, isAdmin, createMenuItem);
+router.post("/", createMenuItem);
 
 router.get("/", getAllMenuItems);
 

@@ -9,9 +9,13 @@
   "scripts": {
     "dev": "nodemon -r dotenv/config --experimental-json-modules app.js"
   },
+  "engines": {
+    "node": "22.16.0"
+  },
   "dependencies": {
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.3",
+    "cloudinary": "^2.10.0",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
@@ -22,6 +26,7 @@
     "lint": "^1.2.2",
     "mongoose": "^9.7.0",
     "multer": "^2.2.0",
+    "node-cron": "^4.5.0",
     "node-router": "^1.0.2",
     "nodemon": "^3.1.14"
   }

@@ -6,7 +6,7 @@ import { verifyFirebaseToken } from "../Middleware/auth.middleware.js";
 
 const router = express.Router()
 
-router.post("/", verifyFirebaseToken, createOrder);
+router.post("/", createOrder);
 
 router.get("/", getAllOrders);
 

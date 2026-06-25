@@ -1,13 +1,11 @@
-import dotenv from "dotenv";
-// Load environment variables first
-dotenv.config();
-
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import connectDB from "./Db/index.js";
-import authrouter from "./src/Routes/auth.routes.js";
+import authrouter from "./src/routes/auth.routes.js";
 import { apiLimiter } from "./src/Middleware/rateLimit.middleware.js";
+import "./src/jobs/tableStatus.job.js";
+
 
 
 // Connect to Database
@@ -29,42 +27,42 @@ app.get("/api/health", apiLimiter, (req, res) => {
   });
 });
 
-import branch from "./src/Routes/branch.routes.js"
-import category from "./src/Routes/category.routes.js"
-import menu from "./src/Routes/menu.routes.js"
-import table from "./src/Routes/table.routes.js"
-import orders from "./src/Routes/order.routes.js"
+import branch from "./src/routes/branch.routes.js"  
+import category from "./src/routes/category.routes.js"
+import menu from "./src/routes/menu.routes.js"
+import table from "./src/routes/table.routes.js"
+import orders from "./src/routes/order.routes.js"
 import analyticsRouter from "./src/routes/analytics.routes.js";
-import Customers from "./src/Routes/customer.routes.js";
-import audit from "./src/Routes/audit.routes.js";
-import employee from "./src/Routes/employee.routes.js";
-import inventory from "./src/Routes/inventory.routes.js";
-import notification from "./src/Routes/notification.routes.js";
-import orderDetails from "./src/Routes/orderDetails.routes.js";
-import payment from "./src/Routes/payment.routes.js";
-import sales from "./src/Routes/sales.routes.js";
-import user from "./src/Routes/user.routes.js";
+import Customers from "./src/routes/customer.routes.js";
+import audit from "./src/routes/audit.routes.js";
+import employee from "./src/routes/employee.routes.js";
+import inventory from "./src/routes/inventory.routes.js";
+import notification from "./src/routes/notification.routes.js";
+import orderDetails from "./src/routes/orderDetails.routes.js";
+import payment from "./src/routes/payment.routes.js";
+import sales from "./src/routes/sales.routes.js";
+import user from "./src/routes/user.routes.js";
 
 
-
-
-
-app.use("/api/v1/analytics", analyticsRouter);
+app.use("/api/v1/analytics",analyticsRouter);
 app.use("/api/auth",authrouter)
-app.use("/api/branch", branch)
-app.use("/api/category", category)
-app.use("/api/menu", menu)
-app.use("/api/table", table)
-app.use("/api/orders", orders)
-app.use("/api/customers", Customers);
-app.use("/api/audit", audit);
-app.use("/api/employees", employee);
-app.use("/api/inventory", inventory);
-app.use("/api/notifications", notification);
-app.use("/api/order-details", orderDetails);
-app.use("/api/payments", payment);
-app.use("/api/sales", sales);
-app.use("/api/users", user);
+app.use("/api/branch",branch)
+app.use("/api/category",category)
+app.use("/api/menu",menu)
+app.use("/api/table",table)
+app.use("/api/orders",orders)
+app.use("/api/customers",Customers);
+app.use("/api/audit",audit);
+app.use("/api/employees",employee);
+app.use("/api/inventory",inventory);
+app.use("/api/notifications",notification);
+app.use("/api/order-details",orderDetails);
+app.use("/api/payments",payment);
+app.use("/api/sales",sales);
+app.use("/api/users",user);
+
+
+
 
 // Global Error Handler
 app.use((err, req, res, next) => {
