@@ -1,4 +1,4 @@
-import cloudinary from "cloudinary"
+import {v2 as cloudinary} from "cloudinary"
 import fs from 'fs';
 
 cloudinary.config({
@@ -14,16 +14,18 @@ const uploadImage = async (filePath) => {
             return null;
         }
         const result = await cloudinary.uploader.upload(filePath, {
-            folder: 'HOS',
+            folder: 'salesforce-buddy',
             use_filename: true,
             unique_filename: false,
             overwrite: true,
             resource_type: 'auto'
         });
         // console.log('Image uploaded', result);
-        fs.unlinkSync(filePath); // Delete the local file after upload
         return result.secure_url;
     } catch (error) {
+        console.log("Cloudinary error:", error);
+        console.log("Error message:", error?.message);
+        console.log("Error response:", error?.response);
         fs.unlinkSync(filePath); // Delete the local file in case of error
         throw error;
     }
@@ -70,4 +72,4 @@ const deleteImagesByPublicIds = async (publicIds) => {
     });
 }
 
-export default {uploadImage, deleteImageByUrl, getPublicIdFromUrl, deleteImagesByPublicIds}
+export {uploadImage, deleteImageByUrl, getPublicIdFromUrl, deleteImagesByPublicIds}

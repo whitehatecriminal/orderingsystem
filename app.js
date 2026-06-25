@@ -4,6 +4,7 @@ import helmet from "helmet";
 import connectDB from "./Db/index.js";
 import authrouter from "./src/routes/auth.routes.js";
 import { apiLimiter } from "./src/Middleware/rateLimit.middleware.js";
+import "./src/jobs/tableStatus.job.js";
 
 // Connect to Database
 connectDB();

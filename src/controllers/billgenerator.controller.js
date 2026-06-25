@@ -5,7 +5,7 @@ import Order from "../models/orders.model.js";
 import OrderDetail from "../models/orderDetails.model.js";
 import MenuItem from "../models/menu.model.js";
 import Table from "../models/table.model.js";
-import uploadImage from "../../config/cloudinary.config.js";
+import {uploadImage} from "../../config/cloudinary.config.js";
 import fs from "fs";
 
 export const createBill = asyncHandler(async (req, res) => {
@@ -112,7 +112,6 @@ export const uploadImages = asyncHandler(async(req, res)=> {
     }
 
     const localFilePath = req.file.path;
-    console.log(`Local Path ${localFilePath}`)
 
     const result = await uploadImage(localFilePath);
     console.log(`result ${result}`)

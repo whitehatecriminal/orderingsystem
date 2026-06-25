@@ -9,35 +9,38 @@ const orderDetailsSchema = new mongoose.Schema(
       index: true
     },
 
-    menuItemId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "MenuItem",
-      required: true
-    },
+    items: [
+      {
+        menuItemId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "MenuItem",
+          required: true
+        },
 
-    quantity: {
-      type: Number,
-      required: true,
-      min: 1
-    },
+        quantity: {
+          type: Number,
+          required: true,
+          min: 1
+        },
 
-    unitPrice: {
-      type: Number,
-      required: true,
-      min: 0
-    },
+        unitPrice: {
+          type: Number,
+          required: true,
+          min: 0
+        },
 
-    totalPrice: {
-      type: Number,
-      required: true,
-      min: 0
-    },
+        totalPrice: {
+          type: Number,
+          required: true,
+          min: 0
+        },
 
-    notes: {
-      type: String,
-      trim: true,
-      default: ""
-    }
+        notes: {
+          type: String,
+          default: ""
+        }
+      }
+    ]
   },
   {
     timestamps: true,
@@ -45,7 +48,4 @@ const orderDetailsSchema = new mongoose.Schema(
   }
 );
 
-export default mongoose.model(
-  "OrderDetail",
-  orderDetailsSchema
-);
+export default mongoose.model("OrderDetail", orderDetailsSchema);

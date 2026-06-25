@@ -3,11 +3,13 @@ import ApiResponse from "../utils/ApiRespose.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import Table from "../models/table.model.js"
 import Branch from "../models/branch.model.js"
+import Customer from "../models/customer.model.js"
 
 export const createOrder = asyncHandler(async (req, res) => {
   const user = req.user;
   const {
-    customerId,
+    customername,
+    email,
     branchId,
     specialInstructions,
     subtotal = 0,
@@ -30,6 +32,12 @@ export const createOrder = asyncHandler(async (req, res) => {
       .status(404)
       .json(new ApiResponse(404, "Branch not found"));
   }
+
+  // creating customer
+  const customer = await Customer.create({
+    name: customername,
+    email: email
+  });
 
   // Find first vacant table
   const table = await Table.findOne({
@@ -73,7 +81,8 @@ export const createOrder = asyncHandler(async (req, res) => {
       "Order created successfully",
       {
         order,
-        table
+        table,
+        customer
       }
     )
   );
