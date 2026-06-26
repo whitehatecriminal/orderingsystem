@@ -19,6 +19,13 @@ app.use(helmet());
 app.use(cors()); // Crucial for allowing requests from your headless storefront
 app.use(express.json()); // Parses incoming JSON payloads
 
+app.get("/", (req, res) => {
+  res.status(200).json({
+    status: "ok",
+    message: "Development server is running"
+  })
+})
+
 // Health Check Route
 app.get("/api/health", apiLimiter, (req, res) => {
   res.status(200).json({
@@ -60,9 +67,6 @@ app.use("/api/order-details",orderDetails);
 app.use("/api/payments",payment);
 app.use("/api/sales",sales);
 app.use("/api/users",user);
-
-
-
 
 // Global Error Handler
 app.use((err, req, res, next) => {
