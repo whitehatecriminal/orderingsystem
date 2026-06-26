@@ -1,6 +1,7 @@
 import User from "../models/user.model.js";
 import bcrypt from "bcryptjs";
 import ApiResponse from "../utils/ApiRespose.js"
+import Employee from "../models/employee.model.js";
 
 export const registerUser = async (req, res) => {
    try {
@@ -65,7 +66,7 @@ export const loginUser = async (req, res) => {
 
   if (
     firebaseUser?.decodedToken?.firebase?.sign_in_provider === "password" &&
-    !data.userInfo.password
+    !data.password
   ) {
     return res
       .status(400)
@@ -81,7 +82,7 @@ export const loginUser = async (req, res) => {
   }
 
   if (firebaseUser?.decodedToken?.firebase?.sign_in_provider === "password") {
-    const isMatch = await bcrypt.compare(data.userInfo.password, user.password);
+    const isMatch = await bcrypt.compare(data.password, user.password);
 
     if (!isMatch) {
       return res
