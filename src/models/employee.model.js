@@ -26,8 +26,7 @@ const employeeSchema = new mongoose.Schema(
         "waiter",
         "cashier",
         "chef",
-        "kitchen_staff"
-        
+        "kitchen_staff"   
       ]
     },
 
@@ -35,6 +34,11 @@ const employeeSchema = new mongoose.Schema(
       type: Number,
       default: 0,
       min: 0
+    },
+
+    image: {
+      type: String,
+      default: ""
     },
 
     joiningDate: {

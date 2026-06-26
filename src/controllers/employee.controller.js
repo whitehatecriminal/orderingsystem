@@ -30,11 +30,20 @@ export const createEmployee = asyncHandler(async (req, res) => {
     );
   }
 
-  // Count employees in this branch
-  const employeeCount = await Employee.countDocuments({ branchId });
+  // Find all employees globally to generate a unique employee code
+  const employees = await Employee.find({}).select("employeeCode");
 
-  // Generate employee code
-  const employeeCode = `EMP${String(employeeCount + 1).padStart(3, "0")}`;
+  let maxNumber = 0;
+  employees.forEach(emp => {
+    if (emp.employeeCode) {
+      const num = parseInt(emp.employeeCode.replace("EMP", ""), 10);
+      if (!isNaN(num) && num > maxNumber) {
+        maxNumber = num;
+      }
+    }
+  });
+
+  const employeeCode = `EMP${String(maxNumber + 1).padStart(3, "0")}`;
 
   const employee = await Employee.create({
     userId,
