@@ -1,3 +1,4 @@
+import { uploadImage } from "../../config/cloudinary.config.js";
 import MenuItem from "../models/menu.model.js";
 import ApiResponse from "../utils/ApiRespose.js";
 import asyncHandler from "../utils/asyncHandler.js";
@@ -8,7 +9,6 @@ export const createMenuItem = asyncHandler(async (req, res) => {
     categoryId,
     description,
     price,
-    image,
     branchId,
     plate,
     customizationOptions
@@ -16,6 +16,20 @@ export const createMenuItem = asyncHandler(async (req, res) => {
 
   if(!name || !categoryId || !price){
     return res.status(400).json(new ApiResponse(400, "PLease provide all field"))
+  }
+
+  let image = "";
+
+  if (req.file) {
+    const uploadedImage = await uploadImage(req.file.path);
+
+    if (!uploadedImage) {
+      return res.status(400).json(
+        new ApiResponse(400, "Image upload failed")
+      );
+    }
+    
+    image = uploadedImage;
   }
 
   const menuItem = await MenuItem.create({
@@ -73,12 +87,29 @@ export const getMenuItemById = asyncHandler(async (req, res) => {
 export const updateMenuItem = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
+  // Create update object from req.body
+  const updateData = { ...(req.body || {}) };
+
+  // If image is uploaded, upload and add to update data
+  if (req.file) {
+    const localFilePath = req.file.path;
+    const uploadedImag = await uploadImage(localFilePath);
+
+    if (!uploadedImag) {
+      return res.status(400).json(
+        new ApiResponse(400, "Image upload failed")
+      );
+    }
+
+    updateData.image = uploadedImag; // adjust according to your upload response
+  }
+
   const menuItem = await MenuItem.findByIdAndUpdate(
     id,
-    req.body,
+    updateData,
     {
       new: true,
-      runValidators: true
+      runValidators: true,
     }
   );
 

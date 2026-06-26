@@ -12,7 +12,7 @@ import {verifyAdminAccess} from "../Middleware/verifyadminaccess.middleware.js"
 
 const router = express.Router();
 
-router.use(verifyFirebaseToken);
+// router.use(verifyFirebaseToken);
 
 router.get("/me", getCurrentUser);
 router.get("/", verifyAdminAccess, getAllUsers);

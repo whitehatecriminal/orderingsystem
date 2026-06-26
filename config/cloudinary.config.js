@@ -20,7 +20,7 @@ const uploadImage = async (filePath) => {
             overwrite: true,
             resource_type: 'auto'
         });
-        // console.log('Image uploaded', result);
+        console.log('Image uploaded', result);
         return result.secure_url;
     } catch (error) {
         console.log("Cloudinary error:", error);
