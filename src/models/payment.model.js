@@ -17,15 +17,27 @@ const paymentSchema = new mongoose.Schema(
 
     paymentMethod: {
       type: String,
-      enum: ["cash", "card", "upi", "wallet"],
+      enum: ["cash", "card", "upi", "wallet", "razorpay"],
       required: true
     },
 
     transactionId: {
       type: String,
-      unique: true,
-      sparse: true,
-      default: null,
+      trim: true
+    },
+
+    razorpayOrderId: {
+      type: String,
+      trim: true
+    },
+
+    razorpayPaymentId: {
+      type: String,
+      trim: true
+    },
+
+    razorpaySignature: {
+      type: String,
       trim: true
     },
 
@@ -54,6 +66,30 @@ const paymentSchema = new mongoose.Schema(
   {
     timestamps: true,
     versionKey: false
+  }
+);
+
+paymentSchema.index(
+  { transactionId: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { transactionId: { $type: "string" } }
+  }
+);
+
+paymentSchema.index(
+  { razorpayOrderId: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { razorpayOrderId: { $type: "string" } }
+  }
+);
+
+paymentSchema.index(
+  { razorpayPaymentId: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { razorpayPaymentId: { $type: "string" } }
   }
 );
 

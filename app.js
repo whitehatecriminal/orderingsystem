@@ -15,9 +15,25 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Security & Utility Middlewares
-app.use(helmet());
+app.use(helmet({
+  crossOriginEmbedderPolicy: false,
+  contentSecurityPolicy: {
+    directives: {
+      "default-src": ["'self'"],
+      "script-src": ["'self'", "'unsafe-inline'", "https://checkout.razorpay.com"],
+      "style-src": ["'self'", "'unsafe-inline'", "https://*.razorpay.com"],
+      "connect-src": ["'self'", "https://api.razorpay.com", "https://*.razorpay.com"],
+      "frame-src": ["'self'", "https://api.razorpay.com", "https://*.razorpay.com", "https://checkout.razorpay.com"],
+      "child-src": ["'self'", "https://api.razorpay.com", "https://*.razorpay.com", "https://checkout.razorpay.com"],
+      "form-action": ["'self'", "https://api.razorpay.com", "https://*.razorpay.com"],
+      "img-src": ["'self'", "data:", "https://*.razorpay.com"],
+      "font-src": ["'self'", "data:", "https://*.razorpay.com"]
+    }
+  }
+}));
 app.use(cors()); // Crucial for allowing requests from your headless storefront
 app.use(express.json()); // Parses incoming JSON payloads
+app.use(express.static("public"));
 
 // Health Check Route
 app.get("/api/health", apiLimiter, (req, res) => {
