@@ -6,6 +6,7 @@ import { verifyFirebaseToken } from "../Middleware/auth.middleware.js";
 import {isAdmin} from "../Middleware/admin.middleware.js"
 import { verifyAdminAccess } from "../Middleware/verifyadminaccess.middleware.js";
 import { upload } from "../Middleware/multer.middleware.js";
+import { authorizeRoles } from "../Middleware/admin.middleware.js";
 
 const router  = express.Router();
 
@@ -23,7 +24,7 @@ router.delete("/:id", verifyFirebaseToken, isAdmin, deleteMenuItem);
 router.patch(
   "/:id/availability",
   verifyFirebaseToken,
-  isAdmin,
+  authorizeRoles('admin', 'manager', 'chef'),
   toggleMenuItemAvailability
 );
 

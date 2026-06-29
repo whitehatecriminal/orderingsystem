@@ -1,20 +1,20 @@
 import Order from "../models/orders.model.js";
 import ApiResponse from "../utils/ApiRespose.js";
 import asyncHandler from "../utils/asyncHandler.js";
-import Table from "../models/table.model.js"
-import Branch from "../models/branch.model.js"
-import Customer from "../models/customer.model.js"
+import Table from "../models/table.model.js";
+import Branch from "../models/branch.model.js";
+import Customer from "../models/customer.model.js";
 
 export const createOrder = asyncHandler(async (req, res) => {
   const user = req.user;
   const {
     customername,
-    email,
+    phone,
     branchId,
     specialInstructions,
     subtotal = 0,
     tax = 0,
-    discount = 0
+    discount = 0,
   } = req.body;
 
   // Validate Branch ID
@@ -28,21 +28,32 @@ export const createOrder = asyncHandler(async (req, res) => {
   const branch = await Branch.findById(branchId);
 
   if (!branch) {
-    return res
-      .status(404)
-      .json(new ApiResponse(404, "Branch not found"));
+    return res.status(404).json(new ApiResponse(404, "Branch not found"));
   }
 
-  // creating customer
-  const customer = await Customer.create({
-    name: customername,
-    email: email
-  });
+  let customer;
+
+  if (customername && phone) {
+    customer = await Customer.findOneAndUpdate(
+      { phone }, // Find by phone
+      {
+        $set: {
+          name: customername,
+          phone,
+        },
+      },
+      {
+        new: true, // Return updated document
+        upsert: true, // Create if not found
+        setDefaultsOnInsert: true, // Apply schema defaults when creating
+      },
+    );
+  }
 
   // Find first vacant table
   const table = await Table.findOne({
     branchId,
-    status: "vacant"
+    status: "vacant",
   }).sort({ tableNumber: 1 });
 
   if (!table) {
@@ -60,7 +71,7 @@ export const createOrder = asyncHandler(async (req, res) => {
   // Create Order
   const order = await Order.create({
     tableId: table._id,
-    customerId,
+    customerId: customer._id,
     waiterId,
     branchId,
     specialInstructions,
@@ -68,7 +79,7 @@ export const createOrder = asyncHandler(async (req, res) => {
     tax,
     discount,
     totalAmount,
-    status: "pending"
+    status: "pending",
   });
 
   // Update table status
@@ -76,15 +87,11 @@ export const createOrder = asyncHandler(async (req, res) => {
   await table.save();
 
   return res.status(201).json(
-    new ApiResponse(
-      201,
-      "Order created successfully",
-      {
-        order,
-        table,
-        customer
-      }
-    )
+    new ApiResponse(201, "Order created successfully", {
+      order,
+      table,
+      customer,
+    }),
   );
 });
 
@@ -95,9 +102,9 @@ export const getAllOrders = asyncHandler(async (req, res) => {
     .populate("waiterId", "fullName email")
     .populate("branchId", "branchName");
 
-  return res.status(200).json(
-    new ApiResponse(200, "Orders fetched successfully", orders)
-  );
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "Orders fetched successfully", orders));
 });
 
 import mongoose from "mongoose";
@@ -106,9 +113,7 @@ export const getOrderById = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(400).json(
-      new ApiResponse(400, "Invalid order ID")
-    );
+    return res.status(400).json(new ApiResponse(400, "Invalid order ID"));
   }
 
   const order = await Order.findById(id)
@@ -118,14 +123,12 @@ export const getOrderById = asyncHandler(async (req, res) => {
     .populate("branchId", "branchName");
 
   if (!order) {
-    return res.status(404).json(
-      new ApiResponse(404, "Order not found")
-    );
+    return res.status(404).json(new ApiResponse(404, "Order not found"));
   }
 
-  return res.status(200).json(
-    new ApiResponse(200, "Order fetched successfully", order)
-  );
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "Order fetched successfully", order));
 });
 
 export const updateOrder = asyncHandler(async (req, res) => {
@@ -141,42 +144,30 @@ export const updateOrder = asyncHandler(async (req, res) => {
     const existingOrder = await Order.findById(id);
 
     if (!existingOrder) {
-      return res.status(404).json(
-        new ApiResponse(404, "Order not found")
-      );
+      return res.status(404).json(new ApiResponse(404, "Order not found"));
     }
 
-    const subtotal =
-      updateData.subtotal ?? existingOrder.subtotal;
+    const subtotal = updateData.subtotal ?? existingOrder.subtotal;
 
-    const tax =
-      updateData.tax ?? existingOrder.tax;
+    const tax = updateData.tax ?? existingOrder.tax;
 
-    const discount =
-      updateData.discount ?? existingOrder.discount;
+    const discount = updateData.discount ?? existingOrder.discount;
 
-    updateData.totalAmount =
-      subtotal + tax - discount;
+    updateData.totalAmount = subtotal + tax - discount;
   }
 
-  const order = await Order.findByIdAndUpdate(
-    id,
-    updateData,
-    {
-      new: true,
-      runValidators: true
-    }
-  );
+  const order = await Order.findByIdAndUpdate(id, updateData, {
+    new: true,
+    runValidators: true,
+  });
 
   if (!order) {
-    return res.status(404).json(
-      new ApiResponse(404, "Order not found")
-    );
+    return res.status(404).json(new ApiResponse(404, "Order not found"));
   }
 
-  return res.status(200).json(
-    new ApiResponse(200, "Order updated successfully", order)
-  );
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "Order updated successfully", order));
 });
 
 export const deleteOrder = asyncHandler(async (req, res) => {
@@ -185,14 +176,12 @@ export const deleteOrder = asyncHandler(async (req, res) => {
   const order = await Order.findByIdAndDelete(id);
 
   if (!order) {
-    return res.status(404).json(
-      new ApiResponse(404, "Order not found")
-    );
+    return res.status(404).json(new ApiResponse(404, "Order not found"));
   }
 
-  return res.status(200).json(
-    new ApiResponse(200, "Order deleted successfully")
-  );
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "Order deleted successfully"));
 });
 
 export const updateOrderStatus = asyncHandler(async (req, res) => {
@@ -205,28 +194,20 @@ export const updateOrderStatus = asyncHandler(async (req, res) => {
     "ready",
     "served",
     "completed",
-    "cancelled"
+    "cancelled",
   ];
 
   if (!validStatuses.includes(status)) {
-    return res.status(400).json(
-      new ApiResponse(400, "Invalid order status")
-    );
+    return res.status(400).json(new ApiResponse(400, "Invalid order status"));
   }
 
-  const order = await Order.findByIdAndUpdate(
-    id,
-    { status },
-    { new: true }
-  );
+  const order = await Order.findByIdAndUpdate(id, { status }, { new: true });
 
   if (!order) {
-    return res.status(404).json(
-      new ApiResponse(404, "Order not found")
-    );
+    return res.status(404).json(new ApiResponse(404, "Order not found"));
   }
 
-  return res.status(200).json(
-    new ApiResponse(200, "Order status updated", order)
-  );
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "Order status updated", order));
 });

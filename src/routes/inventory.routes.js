@@ -22,7 +22,7 @@ router.get("/branch/:branchId", verifyFirebaseToken, getInventoryByBranch);
 
 // Mutation operations require admin access
 router.post("/", verifyFirebaseToken, authorizeRoles('admin', 'manager'), createInventoryItem);
-router.put("/:id", verifyFirebaseToken, isAdmin, updateInventoryItem);
+router.put("/:id", verifyFirebaseToken, authorizeRoles('admin', 'manager'), updateInventoryItem);
 router.delete("/:id", verifyFirebaseToken, isAdmin, deleteInventoryItem);
 
 export default router;
