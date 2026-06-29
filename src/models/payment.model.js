@@ -17,8 +17,13 @@ const paymentSchema = new mongoose.Schema(
 
     paymentMethod: {
       type: String,
-      enum: ["cash", "card", "upi", "wallet", "razorpay"],
+      enum: ["cash", "card", "upi", "wallet"],
       required: true
+    },
+    paymentGateway: {
+      type: String,
+      enum: ["razorpay"],
+      default: null
     },
 
     transactionId: {
@@ -73,7 +78,7 @@ paymentSchema.index(
   { transactionId: 1 },
   {
     unique: true,
-    partialFilterExpression: { transactionId: { $type: "string" } }
+    partialFilterExpression: { transactionId: { $exists: true, $ne: null } }
   }
 );
 
@@ -81,7 +86,7 @@ paymentSchema.index(
   { razorpayOrderId: 1 },
   {
     unique: true,
-    partialFilterExpression: { razorpayOrderId: { $type: "string" } }
+    partialFilterExpression: { razorpayOrderId: { $exists: true, $ne: null } }
   }
 );
 
@@ -89,7 +94,7 @@ paymentSchema.index(
   { razorpayPaymentId: 1 },
   {
     unique: true,
-    partialFilterExpression: { razorpayPaymentId: { $type: "string" } }
+    partialFilterExpression: { razorpayPaymentId: {$exists: true, $ne: null  } }
   }
 );
 

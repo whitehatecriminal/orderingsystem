@@ -1,16 +1,16 @@
 import Payment from "../models/payment.model.js";
+import Order from "../models/orders.model.js";
+import Table from "../models/table.model.js";
 import ApiResponse from "../utils/ApiRespose.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import mongoose from "mongoose";
+
+
 import {
   createRazorpayOrder,
   getRazorpayKeyId,
   verifyRazorpaySignature
 } from "../utils/razorpay.js";
-
-// Create Payment
-import Order from "../models/orders.model.js";
-import Table from "../models/table.model.js";
 
 const completePaidOrder = async (order) => {
   order.status = "completed";
@@ -23,82 +23,129 @@ const completePaidOrder = async (order) => {
   });
 };
 
+//  CASH PAYMENT
+
 export const createPayment = asyncHandler(async (req, res) => {
   const {
     orderId,
     amount,
     paymentMethod,
     transactionId,
-    status,
-    paidAt,
     branchId
   } = req.body;
 
-  // Check duplicate transaction ID
-  if (transactionId) {
-    const existingTx = await Payment.findOne({ transactionId });
+  if (!mongoose.Types.ObjectId.isValid(orderId)) {
+    return res
+      .status(400)
+      .json(new ApiResponse(400, "Invalid Order ID"));
+  }
 
-    if (existingTx) {
+  if (paymentMethod !== "cash") {
+    return res.status(400).json(
+      new ApiResponse(
+        400,
+        "Only cash payment is allowed here. Use Razorpay APIs for online payment."
+      )
+    );
+  }
+
+  const order = await Order.findById(orderId);
+
+  if (!order) {
+    return res
+      .status(404)
+      .json(new ApiResponse(404, "Order not found"));
+  }
+
+  const existingPayment = await Payment.findOne({
+    orderId,
+    status: "paid"
+  });
+
+  if (existingPayment) {
+    return res.status(400).json(
+      new ApiResponse(400, "Payment already completed")
+    );
+  }
+
+  if (transactionId) {
+    const tx = await Payment.findOne({ transactionId });
+
+    if (tx) {
       return res.status(400).json(
         new ApiResponse(400, "Transaction ID already exists")
       );
     }
   }
 
-  // Verify order exists
-  const order = await Order.findById(orderId);
-
-  if (!order) {
-    return res.status(404).json(
-      new ApiResponse(404, "Order not found")
-    );
-  }
-
-  // Create payment
   const payment = await Payment.create({
     orderId,
     amount,
-    paymentMethod,
+    paymentMethod: "cash",
+    paymentGateway: null,
     transactionId,
-    status,
-    paidAt,
-    branchId
+    branchId,
+    status: "paid",
+    paidAt: new Date()
   });
 
-  // If payment is successful
-  if (payment.status === "paid") {
-    await completePaidOrder(order);
-  }
+  await completePaidOrder(order);
 
   return res.status(201).json(
     new ApiResponse(
       201,
-      "Payment registered successfully",
+      "Cash payment completed successfully",
       payment
     )
   );
 });
 
+
+//  GET RAZORPAY KEY
+
+
 export const getRazorpayConfig = asyncHandler(async (req, res) => {
+
   const keyId = getRazorpayKeyId();
 
   if (!keyId) {
     return res.status(500).json(
-      new ApiResponse(500, "Razorpay key ID is missing")
+      new ApiResponse(500, "Razorpay Key ID missing")
     );
   }
 
   return res.status(200).json(
-    new ApiResponse(200, "Razorpay config fetched successfully", { keyId })
+    new ApiResponse(
+      200,
+      "Razorpay config fetched successfully",
+      { keyId }
+    )
   );
 });
 
+
+//  CREATE RAZORPAY ORDER
+
+
 export const createRazorpayPaymentOrder = asyncHandler(async (req, res) => {
-  const { orderId } = req.body;
+
+  const {
+    orderId,
+    paymentMethod
+  } = req.body;
 
   if (!mongoose.Types.ObjectId.isValid(orderId)) {
     return res.status(400).json(
       new ApiResponse(400, "Invalid order ID")
+    );
+  }
+
+  if (!["upi", "card", "wallet"].includes(paymentMethod)) {
+    return res.status(400).json(
+      new ApiResponse(
+        400,
+        "Payment method must be upi, card or wallet"
+      )
     );
   }
 
@@ -112,18 +159,20 @@ export const createRazorpayPaymentOrder = asyncHandler(async (req, res) => {
 
   if (order.status === "completed") {
     return res.status(400).json(
-      new ApiResponse(400, "Order is already completed")
+      new ApiResponse(400, "Order already completed")
     );
   }
 
-  const existingPaidPayment = await Payment.findOne({
-    orderId: order._id,
+  const existingPayment = await Payment.findOne({
+    orderId,
     status: "paid"
   });
 
-  if (existingPaidPayment) {
+
+  if (existingPayment) {
     return res.status(400).json(
-      new ApiResponse(400, "Payment is already completed for this order")
+      new ApiResponse(400, "Payment already completed for this order"
+      )
     );
   }
 
@@ -140,20 +189,27 @@ export const createRazorpayPaymentOrder = asyncHandler(async (req, res) => {
   const payment = await Payment.create({
     orderId: order._id,
     amount: order.totalAmount,
-    paymentMethod: "razorpay",
+    paymentMethod,
+    paymentGateway: "razorpay",
     status: "pending",
     branchId: order.branchId,
     razorpayOrderId: razorpayOrder.id
   });
 
   return res.status(201).json(
-    new ApiResponse(201, "Razorpay order created successfully", {
-      keyId: getRazorpayKeyId(),
-      payment,
-      razorpayOrder
-    })
+    new ApiResponse(
+      201,
+      "Razorpay order created successfully",
+      {
+        keyId: getRazorpayKeyId(),
+        payment,
+        razorpayOrder
+      }
+    )
   );
 });
+
+//  VERIFY RAZORPAY PAYMENT
 
 export const verifyRazorpayPayment = asyncHandler(async (req, res) => {
   const {
@@ -161,6 +217,16 @@ export const verifyRazorpayPayment = asyncHandler(async (req, res) => {
     razorpay_payment_id,
     razorpay_signature
   } = req.body;
+
+  if (
+    !razorpay_order_id ||
+    !razorpay_payment_id ||
+    !razorpay_signature
+  ) {
+    return res.status(400).json(
+      new ApiResponse(400, "Missing Razorpay payment details")
+    );
+  }
 
   const isValidSignature = verifyRazorpaySignature({
     razorpayOrderId: razorpay_order_id,
@@ -174,7 +240,9 @@ export const verifyRazorpayPayment = asyncHandler(async (req, res) => {
     );
   }
 
-  const payment = await Payment.findOne({ razorpayOrderId: razorpay_order_id });
+  const payment = await Payment.findOne({
+    razorpayOrderId: razorpay_order_id
+  });
 
   if (!payment) {
     return res.status(404).json(
@@ -184,7 +252,24 @@ export const verifyRazorpayPayment = asyncHandler(async (req, res) => {
 
   if (payment.status === "paid") {
     return res.status(200).json(
-      new ApiResponse(200, "Payment already verified", payment)
+      new ApiResponse(
+        200,
+        "Payment already verified",
+        payment
+      )
+    );
+  }
+
+  const duplicatePayment = await Payment.findOne({
+    razorpayPaymentId: razorpay_payment_id
+  });
+
+  if (duplicatePayment) {
+    return res.status(400).json(
+      new ApiResponse(
+        400,
+        "Duplicate Razorpay payment detected"
+      )
     );
   }
 
@@ -198,62 +283,87 @@ export const verifyRazorpayPayment = asyncHandler(async (req, res) => {
 
   payment.status = "paid";
   payment.transactionId = razorpay_payment_id;
-  payment.razorpayPaymentId = razorpay_payment_id;
+  payment.razorpayPaymentId = razorpay_payment_id
   payment.razorpaySignature = razorpay_signature;
   payment.paidAt = new Date();
+
   await payment.save();
 
   await completePaidOrder(order);
 
   return res.status(200).json(
-    new ApiResponse(200, "Razorpay payment verified successfully", payment)
+    new ApiResponse(
+      200,
+      "Payment verified successfully",
+      payment
+    )
   );
 });
 
+
+//  REPAIR PAYMENT INDEXES
+
 export const repairPaymentIndexes = asyncHandler(async (req, res) => {
-  await Payment.collection.dropIndex("transactionId_1").catch((error) => {
-    if (error.codeName !== "IndexNotFound") throw error;
-  });
 
-  await Payment.collection.dropIndex("razorpayOrderId_1").catch((error) => {
-    if (error.codeName !== "IndexNotFound") throw error;
-  });
+  const indexes = [
+    "transactionId_1",
+    "razorpayOrderId_1",
+    "razorpayPaymentId_1"
+  ];
 
-  await Payment.collection.dropIndex("razorpayPaymentId_1").catch((error) => {
-    if (error.codeName !== "IndexNotFound") throw error;
-  });
+  for (const index of indexes) {
+
+    try {
+      await Payment.collection.dropIndex(index);
+    } catch (error) {
+      if (error.codeName !== "IndexNotFound") {
+        throw error;
+      }
+
+    }
+
+  }
+
 
   await Payment.syncIndexes();
 
   return res.status(200).json(
-    new ApiResponse(200, "Payment indexes repaired successfully")
+    new ApiResponse(200, "Payment indexes repaired successfully"
+    )
   );
 });
 
-// Get All Payments
+
+//  GET ALL PAYMENTS
+
 export const getAllPayments = asyncHandler(async (req, res) => {
+
   const payments = await Payment.find()
     .populate("orderId")
-    .populate("branchId", "branchName location");
+    .populate("branchId", "branchName")
+    .sort({ createdAt: -1 })
+    .lean();
 
   return res.status(200).json(
     new ApiResponse(200, "Payments fetched successfully", payments)
   );
 });
 
-// Get Payment By ID
+//  GET PAYMENT BY ID
+
 export const getPaymentById = asyncHandler(async (req, res) => {
+
   const { id } = req.params;
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res.status(400).json(
-      new ApiResponse(400, "Invalid payment ID")
+      new ApiResponse(400, "Invalid Payment ID")
     );
   }
 
   const payment = await Payment.findById(id)
     .populate("orderId")
-    .populate("branchId", "branchName location");
+    .populate("branchId", "branchName");
 
   if (!payment) {
     return res.status(404).json(
@@ -264,46 +374,62 @@ export const getPaymentById = asyncHandler(async (req, res) => {
   return res.status(200).json(
     new ApiResponse(200, "Payment fetched successfully", payment)
   );
+
 });
 
-// Update Payment
+//  UPDATE PAYMENT
+
 export const updatePayment = asyncHandler(async (req, res) => {
+
   const { id } = req.params;
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res.status(400).json(
-      new ApiResponse(400, "Invalid payment ID")
+      new ApiResponse(400, "Invalid Payment ID")
     );
   }
 
-  const payment = await Payment.findByIdAndUpdate(
-    id,
-    req.body,
-    { new: true, runValidators: true }
-  );
+  const payment = await Payment.findById(id);
 
   if (!payment) {
     return res.status(404).json(
       new ApiResponse(404, "Payment not found")
     );
   }
+
+  Object.assign(payment, req.body);
+
+  if (payment.status === "paid" && !payment.paidAt) {
+    payment.paidAt = new Date();
+
+    const order = await Order.findById(payment.orderId);
+
+    if (order && order.status !== "completed") {
+      await completePaidOrder(order);
+    }
+  }
+
+  await payment.save();
 
   return res.status(200).json(
     new ApiResponse(200, "Payment updated successfully", payment)
   );
+
 });
 
-// Delete Payment
+//  DELETE PAYMENT
+
 export const deletePayment = asyncHandler(async (req, res) => {
+
   const { id } = req.params;
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res.status(400).json(
-      new ApiResponse(400, "Invalid payment ID")
+      new ApiResponse(400, "Invalid Payment ID")
     );
   }
 
-  const payment = await Payment.findByIdAndDelete(id);
+  const payment = await Payment.findById(id);
 
   if (!payment) {
     return res.status(404).json(
@@ -311,41 +437,68 @@ export const deletePayment = asyncHandler(async (req, res) => {
     );
   }
 
+  // Optional Safety Check
+  if (payment.status === "paid") {
+    return res.status(400).json(
+      new ApiResponse(
+        400,
+        "Paid payment cannot be deleted"
+      )
+    );
+  }
+
+  await payment.deleteOne();
+
   return res.status(200).json(
-    new ApiResponse(200, "Payment deleted successfully")
+    new ApiResponse(200, "Payment deleted successfully"
+    )
   );
+
 });
 
-// Get Payments by Order
+//  GET PAYMENTS BY ORDER
+
 export const getPaymentsByOrder = asyncHandler(async (req, res) => {
+
   const { orderId } = req.params;
 
   if (!mongoose.Types.ObjectId.isValid(orderId)) {
     return res.status(400).json(
-      new ApiResponse(400, "Invalid order ID")
+      new ApiResponse(400, "Invalid Order ID")
     );
   }
 
-  const payments = await Payment.find({ orderId });
+  const payments = await Payment.find({ orderId })
+    .sort({ createdAt: -1 });
 
   return res.status(200).json(
-    new ApiResponse(200, "Payments fetched successfully for the order", payments)
+    new ApiResponse(200, "Payments fetched successfully", payments
+    )
   );
+
 });
 
-// Get Payments by Branch
+//  GET PAYMENTS BY BRANCH
+
 export const getPaymentsByBranch = asyncHandler(async (req, res) => {
+
   const { branchId } = req.params;
 
   if (!mongoose.Types.ObjectId.isValid(branchId)) {
     return res.status(400).json(
-      new ApiResponse(400, "Invalid branch ID")
+      new ApiResponse(400, "Invalid Branch ID")
     );
   }
 
-  const payments = await Payment.find({ branchId });
+  const payments = await Payment.find({ branchId })
+    .sort({ createdAt: -1 });
 
   return res.status(200).json(
-    new ApiResponse(200, "Payments fetched successfully for the branch", payments)
+    new ApiResponse(
+      200,
+      "Payments fetched successfully",
+      payments
+    )
   );
+
 });

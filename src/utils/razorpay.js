@@ -85,3 +85,34 @@ export const verifyRazorpaySignature = ({
     crypto.timingSafeEqual(expectedBuffer, receivedBuffer)
   );
 };
+
+
+
+export const fetchRazorpayPayment = async (paymentId) => {
+
+  const { keyId, keySecret } = getRazorpayCredentials();
+
+  const response = await fetch(
+    `${RAZORPAY_API_URL}/payments/${paymentId}`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Basic ${Buffer.from(
+          `${keyId}:${keySecret}`
+        ).toString("base64")}`
+      }
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new ApiError(
+      response.status,
+      data?.error?.description || "Unable to fetch Razorpay payment", data
+    );
+
+  }
+  return data;
+};
+
