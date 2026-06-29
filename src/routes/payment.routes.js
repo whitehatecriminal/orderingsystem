@@ -1,12 +1,16 @@
 import express from "express";
 import {
   createPayment,
+  createRazorpayPaymentOrder,
   getAllPayments,
   getPaymentById,
+  getRazorpayConfig,
+  repairPaymentIndexes,
   updatePayment,
   deletePayment,
   getPaymentsByOrder,
-  getPaymentsByBranch
+  getPaymentsByBranch,
+  verifyRazorpayPayment
 } from "../controllers/payment.controller.js";
 import {createBill, uploadImages} from "../controllers/billgenerator.controller.js"
 import { verifyFirebaseToken } from "../Middleware/auth.middleware.js";
@@ -18,6 +22,11 @@ const router = express.Router();
 // router.use(verifyFirebaseToken);
 router.post("/bill", createBill)
 router.post("/image", upload.single("Item"), uploadImages)
+
+router.get("/razorpay/config", getRazorpayConfig);
+router.post("/razorpay/create-order", createRazorpayPaymentOrder);
+router.post("/razorpay/verify", verifyRazorpayPayment);
+router.post("/repair-indexes", repairPaymentIndexes);
 
 router.post("/", createPayment);
 router.get("/", getAllPayments);
