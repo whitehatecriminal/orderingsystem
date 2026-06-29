@@ -10,7 +10,7 @@ import {
 } from "../controllers/payment.controller.js";
 import {createBill, uploadImages} from "../controllers/billgenerator.controller.js"
 import { verifyFirebaseToken } from "../Middleware/auth.middleware.js";
-import { isAdmin } from "../Middleware/admin.middleware.js";
+import { authorizeRoles, isAdmin } from "../Middleware/admin.middleware.js";
 import {upload} from "../Middleware/multer.middleware.js";
 
 const router = express.Router();
@@ -24,7 +24,7 @@ router.get("/", getAllPayments);
 router.get("/:id", getPaymentById);
 router.get("/order/:orderId", getPaymentsByOrder);
 router.get("/branch/:branchId", getPaymentsByBranch);
-router.put("/:id", isAdmin, updatePayment);
-router.delete("/:id", isAdmin, deletePayment);
+router.put("/:id", verifyFirebaseToken, authorizeRoles('admin', 'manager'), updatePayment);
+router.delete("/:id", verifyFirebaseToken, isAdmin, deletePayment);
 
 export default router;
