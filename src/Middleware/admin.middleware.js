@@ -21,7 +21,6 @@ export const authorizeRoles = (...roles) => {
       );
     }
 
-
     if (!roles.includes(req.user.dbuser.role)) {
       return res.status(403).json(new ApiResponse(403, "Access Denied"));
     }

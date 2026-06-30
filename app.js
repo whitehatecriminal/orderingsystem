@@ -7,7 +7,6 @@ import { apiLimiter } from "./src/Middleware/rateLimit.middleware.js";
 import "./src/jobs/tableStatus.job.js";
 
 
-
 // Connect to Database
 connectDB();
 
@@ -20,13 +19,13 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       "default-src": ["'self'"],
-      "script-src": ["'self'", "'unsafe-inline'", "https://checkout.razorpay.com"],
-      "style-src": ["'self'", "'unsafe-inline'", "https://*.razorpay.com"],
-      "connect-src": ["'self'", "https://api.razorpay.com", "https://*.razorpay.com"],
+      "script-src": ["'self'", "'unsafe-inline'", "https://checkout.razorpay.com","https://cdn.razorpay.com"],
+      "style-src": ["'self'", "'unsafe-inline'", "https://*.razorpay.com","https://cdn.razorpay.com"],
+      "connect-src": ["'self'", "https://api.razorpay.com", "https://*.razorpay.com","https://cdn.razorpay.com","https://lumberjack.razorpay.com"],
       "frame-src": ["'self'", "https://api.razorpay.com", "https://*.razorpay.com", "https://checkout.razorpay.com"],
       "child-src": ["'self'", "https://api.razorpay.com", "https://*.razorpay.com", "https://checkout.razorpay.com"],
       "form-action": ["'self'", "https://api.razorpay.com", "https://*.razorpay.com"],
-      "img-src": ["'self'", "data:", "https://*.razorpay.com"],
+      "img-src": ["'self'", "data:", "https://*.razorpay.com","https://cdn.razorpay.com"],
       "font-src": ["'self'", "data:", "https://*.razorpay.com"]
     }
   }

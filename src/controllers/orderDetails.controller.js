@@ -13,6 +13,7 @@ export const createOrderDetail = asyncHandler(async (req, res) => {
   // const { orderNumber, branchId, quantity, menuItemId = [], unitPrice, notes } = req.body;
   //multiple order create on same orderid
   // after placing order update price of the order on that orderID and create a notifcation
+  
   let menuItemIds = [];
   for (const item of items) {
     const { menuItemId, quantity, notes } = item;
